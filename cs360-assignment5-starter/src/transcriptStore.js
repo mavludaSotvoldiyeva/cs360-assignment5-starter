@@ -32,12 +32,14 @@ export class TranscriptStore {
     };
   }
 
-  deleteStudent(studentID) {
-    const parsedID = this.#parseStudentID(studentID);
-    if (!this.#students.delete(parsedID)) {
-      throw new Error(`Student not found: ${parsedID}`);
-    }
+ deleteStudent(studentID) {
+  const parsedID = this.#parseStudentID(studentID);
+  if (!this.#students.delete(parsedID)) {
+    throw new Error(`Student not found: ${parsedID}`);
   }
+  this.#grades.delete(parsedID);
+}
+
 
   addGrade(studentID, course, grade) {
     const parsedID = this.#requireStudent(studentID).studentID;
