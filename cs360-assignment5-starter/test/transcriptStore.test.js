@@ -1,6 +1,8 @@
+
 import assert from "node:assert/strict";
 import { beforeEach, describe, test } from "node:test";
 import { TranscriptStore } from "../src/transcriptStore.js";
+import { createAppServer } from "../src/server.js";
 
 describe("TranscriptStore", () => {
   let store;
@@ -53,5 +55,41 @@ describe("TranscriptStore", () => {
     store.deleteStudent(secondID);
     assert.deepEqual(store.getStudentIDs(), [firstID]);
     assert.throws(() => store.deleteStudent(secondID), /Student not found/);
+  });
+
+  test("removes grades when a student is deleted", () => {
+    const studentID = store.addStudent("Ada");
+
+    store.addGrade(studentID, "CS360", 85);
+    store.deleteStudent(studentID);
+
+    assert.equal(store.getGrade(studentID, "CS360"), undefined);
+  });
+
+  test("returns 404 for a deleted student's grade", async () => {
+    const studentID = store.addStudent("Ada");
+    store.addGrade(studentID, "CS360", 85);
+
+    const server = createAppServer(store);
+
+    await new Promise(resolve => {
+      server.listen(0, "127.0.0.1", resolve);
+    });
+
+    try {
+      const url = `http://127.0.0.1:${server.address().port}/transcripts/${studentID}`;
+
+      const deleted = await fetch(url, {
+        method: "DELETE"
+      });
+
+      assert.equal(deleted.status, 204);
+
+      const response = await fetch(`${url}/CS360`);
+
+      assert.equal(response.status, 404);
+    } finally {
+      await new Promise(resolve => server.close(resolve));
+    }
   });
 });
