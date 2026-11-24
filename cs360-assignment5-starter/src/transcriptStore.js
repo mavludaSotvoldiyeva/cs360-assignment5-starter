@@ -14,13 +14,19 @@ export class TranscriptStore {
     return studentID;
   }
 
+  
   getStudentIDs(name) {
     const matches = [];
+
     for (const student of this.#students.values()) {
-      if (name === undefined || student.studentName === String(name)) {
+      if (
+        name === undefined ||
+        student.studentName.toLowerCase() === String(name).trim().toLowerCase()
+      ) {
         matches.push(student.studentID);
       }
     }
+
     return matches;
   }
 
